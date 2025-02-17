@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quit Date Counter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f8ff;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+    }
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .counter {
+      font-size: 1.5rem;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .savings {
+      font-size: 1.25rem;
+      margin-top: 10px;
+      text-align: center;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      background-color: #e6f7ff;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+    .date-time-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .savings-section {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .currency-cost-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .small-input {
+      width: 80px;
+    }
+    .start-tracking {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Quit Date Tracker</h1>
+    <nav>
+      <button onclick="showTab('counter-tab')">Counter</button>
+      <button onclick="showTab('rewards-tab')">Rewards</button>
+    </nav>
+  </div>
+
+  <div id="counter-tab" class="tab-content active">
+    <div class="counter" id="counter">Time since quitting will be shown here.</div>
+    <div class="savings" id="savings">Total Savings: 0</div>
+    <div class="date-time-wrapper">
+      <label for="quit-date">Set Your Quit Date:</label>
+      <input type="date" id="quit-date">
+      <label for="quit-time">Set Your Quit Time:</label>
+      <input type="time" id="quit-time">
+    </div>
+
+    <div class="savings-section">
+      <label for="frequency">Frequency of Use (per day):</label>
+      <input type="number" id="frequency" class="small-input" min="1" placeholder="e.g., 5">
+
+      <div class="currency-cost-wrapper">
+        <label for="currency">Currency:</label>
+        <select id="currency">
+          <option value="$">$</option>
+          <option value="€">€</option>
+          <option value="£">£</option>
+          <option value="₹">₹</option>
+        </select>
+
+        <label for="cost">Cost per Use:</label>
+        <input type="number" id="cost" class="small-input" min="0.01" step="0.01" placeholder="e.g., 10">
+      </div>
+    </div>
+
+    <button class="start-tracking" onclick="saveQuitDate()">Start Tracking</button>
+  </div>
+
+  <div id="rewards-tab" class="tab-content">
+    <h2>Milestone Rewards</h2>
+    <ul>
+      <li>Day 1: Celebrate your first day with a small treat!</li>
+      <li>Day 10: Take yourself out for a coffee or tea.</li>
+      <li>Day 30: Buy yourself a new book or movie.</li>
+      <li>Day 100: Plan a special dinner or outing.</li>
+      <li>Day 365: Treat yourself to a big reward—vacation, gadget, etc.!</li>
+    </ul>
+  </div>
+
+  <script>
+    let quitDate;
+
+    // Load saved date from local storage
+    window.onload = function() {
+      const savedDate = localStorage.getItem('quitDate');
+      if (savedDate) {
+        quitDate = new Date(savedDate);
+        updateCounter();
+        setInterval(updateCounter, 1000);
+      }
+    }
+
+    function saveQuitDate() {
+      const dateInput = document.getElementById('quit-date').value;
+      const timeInput = document.getElementById('quit-time').value;
+
+      if (dateInput && timeInput) {
+        quitDate = new Date(`${dateInput}T${timeInput}`);
+        localStorage.setItem('quitDate', quitDate.toISOString());
+        updateCounter();
+        setInterval(updateCounter, 1000);
+        updateSavings();
+      }
+    }
+
+    function updateCounter() {
+      if (!quitDate) return;
+
+      const now = new Date();
+      const timeDiff = now - quitDate;
+
+      if (timeDiff < 0) {
+        document.getElementById('counter').innerText = 'The quit date is in the future.';
+        document.getElementById('savings').innerText = 'Total Savings: 0';
+        return;
+      }
+
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+      document.getElementById('counter').innerText = 
+        `${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds since quitting.`;
+
+      updateSavings();
+    }
+
+    function updateSavings() {
+      const frequency = document.getElementById('frequency').value;
+      const cost = document.getElementById('cost').value;
+      const currency = document.getElementById('currency').value;
+
+      if (!quitDate || !frequency || !cost) {
+        document.getElementById('savings').innerText = 'Total Savings: 0';
+        return;
+      }
+
+      const now = new Date();
+      const timeDiff = now - quitDate;
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+      const totalSavings = days * frequency * cost;
+      document.getElementById('savings').innerText = `Total Savings: ${currency}${totalSavings.toFixed(2)}`;
+    }
+
+    function showTab(tabId) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
